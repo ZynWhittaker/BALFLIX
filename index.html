@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BALFLIX - Movie & TV Series Streaming</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#E50914',
+                            hover: '#B81D24',
+                            dark: '#141414',
+                            card: '#181818',
+                            input: '#282828',
+                            hoverCard: '#252525'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        logo: ['Bebas Neue', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body { background-color: #141414; color: #ffffff; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #141414; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #E50914; }
+        .nav-glass { background: rgba(20, 20, 20, 0.85); backdrop-filter: blur(12px); }
+        .card-hover-effect { transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease; }
+        .card-hover-effect:hover { transform: scale(1.05); z-index: 20; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.8), 0 8px 10px -6px rgba(229,9,20,0.3); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-brand-red selection:text-white">
+
+    <!-- Top Navigation Bar -->
+    <header id="navbar" class="fixed top-0 left-0 right-0 z-40 transition-all duration-300 nav-glass border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-8">
+                <a href="#" onclick="showSection('home')" class="font-logo text-3xl sm:text-4xl tracking-wider text-brand-red font-bold hover:scale-105 transition-transform flex items-center gap-2">
+                    BALFLIX
+                </a>
+                <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-zinc-300">
+                    <button onclick="showSection('home')" class="hover:text-white transition-colors text-white" id="nav-home">Home</button>
+                    <button onclick="showSection('series')" class="hover:text-white transition-colors" id="nav-series">TV Series</button>
+                    <button onclick="showSection('film')" class="hover:text-white transition-colors" id="nav-film">Movies</button>
+                </nav>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div class="relative hidden sm:block">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-xs"></i>
+                    <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Search movies or series..." 
+                        class="bg-zinc-900/90 text-xs text-white pl-8 pr-4 py-2 rounded-full border border-zinc-700/60 focus:outline-none focus:border-brand-red w-36 focus:w-60 transition-all">
+                </div>
+                <button onclick="openAdminPanel()" class="bg-white hover:bg-zinc-200 text-black px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-md transition-all hover:scale-105">
+                    <i class="fa-solid fa-lock text-[10px] text-black"></i>
+                    <span>Admin Panel</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow pt-16">
+        <section id="heroSection" class="relative w-full min-h-[50vh] lg:min-h-[60vh] flex items-end justify-start bg-zinc-950 overflow-hidden">
+            <div id="heroBackdrop" class="absolute inset-0 bg-cover bg-center transition-all duration-700 scale-105 filter brightness-75"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-[#141414] via-[#141414]/60 to-transparent"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-[#141414] via-[#141414]/80 to-transparent"></div>
+            <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 pt-20 w-full">
+                <div id="heroContent" class="max-w-xl"></div>
+            </div>
+        </section>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+            <section id="moviesSection" class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                        <span class="w-1.5 h-5 bg-brand-red rounded-full inline-block"></span> Latest Movies
+                    </h2>
+                    <span id="moviesCount" class="text-xs text-zinc-400 font-medium">0 Movies</span>
+                </div>
+                <div id="moviesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3"></div>
+            </section>
+
+            <section id="seriesSection" class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                        <span class="w-1.5 h-5 bg-brand-red rounded-full inline-block"></span> Popular TV Series
+                    </h2>
+                    <span id="seriesCount" class="text-xs text-zinc-400 font-medium">0 Series</span>
+                </div>
+                <div id="seriesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3"></div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-zinc-900 py-4 text-center text-zinc-600 text-[10px]">
+        <p>&copy; 2026 BALFLIX. All rights reserved.</p>
+    </footer>
+
+    <!-- ADMIN LOGIN MODAL -->
+    <div id="adminLoginModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-[#181818] border border-zinc-800 text-white rounded-xl w-full max-w-sm p-5 shadow-2xl relative">
+            <button onclick="closeAdminLoginModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white transition-colors p-1">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center text-white font-bold text-base">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <div>
+                    <h3 class="font-logo text-xl tracking-wider text-white font-bold uppercase">ADMIN LOGIN</h3>
+                    <p class="text-[11px] text-zinc-400">Masukkan kata sandi admin</p>
+                </div>
+            </div>
+            <form onsubmit="verifyAdminPassword(event)" class="space-y-3">
+                <div>
+                    <input type="password" id="adminPasswordInput" placeholder="Password" required class="w-full bg-[#282828] text-xs text-white rounded-lg px-3.5 py-2.5 border border-white focus:outline-none focus:border-white">
+                    <p id="adminLoginError" class="text-[11px] text-brand-red mt-1.5 hidden"><i class="fa-solid fa-circle-exclamation mr-1"></i> Kata sandi salah!</p>
+                </div>
+                <div class="flex items-center justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeAdminLoginModal()" class="py-2 px-4 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-white transition-colors">Batal</button>
+                    <button type="submit" class="py-2 px-4 rounded-lg bg-white hover:bg-zinc-200 text-black text-xs font-bold transition-all shadow-md">LOGIN</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ADMIN PANEL DASHBOARD MODAL -->
+    <div id="adminPanelModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-[#181818] border border-zinc-800 text-white rounded-xl w-full max-w-lg p-5 shadow-2xl relative my-6 max-h-[85vh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-zinc-800 pb-3 mb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center text-white font-bold text-sm">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-logo text-xl tracking-wider text-white font-bold uppercase">BALFLIX ADMIN PANEL</h3>
+                        <p class="text-[10px] text-zinc-400">Cloud Database Manager</p>
+                    </div>
+                </div>
+                <button onclick="closeAdminPanelModal()" class="text-zinc-400 hover:text-white transition-colors p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 gap-2 mb-4">
+                <button onclick="openUploadModalFromPanel()" class="bg-white hover:bg-zinc-200 text-black p-3 rounded-lg font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.01]">
+                    <i class="fa-solid fa-plus text-xs text-black"></i>
+                    <span>+ Add New Content</span>
+                </button>
+            </div>
+
+            <div id="adminContentView" class="flex-grow overflow-y-auto space-y-2">
+                <div class="flex items-center justify-between border-b border-zinc-800 pb-2 mb-2 text-xs font-bold">
+                    <span>Live Content (<span id="adminMediaCount">0</span>)</span>
+                </div>
+                <div id="adminContentList" class="space-y-1.5 pr-1 max-h-56 overflow-y-auto"></div>
+            </div>
+
+            <div class="border-t border-zinc-800 pt-3 mt-3 flex justify-between items-center text-xs">
+                <span class="text-green-400 flex items-center gap-1.5"><i class="fa-solid fa-circle text-[6px]"></i> Ready & Synced</span>
+                <button onclick="logoutAdmin()" class="text-zinc-400 hover:text-red-400 transition-colors font-semibold"><i class="fa-solid fa-right-from-bracket mr-1"></i> Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- UPLOAD / EDIT MODAL -->
+    <div id="uploadModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-[#181818] border border-zinc-800 text-white rounded-xl w-full max-w-md p-5 shadow-2xl my-6 relative max-h-[85vh] overflow-y-auto">
+            <button onclick="closeUploadModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white transition-colors p-1">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="mb-4">
+                <h3 id="modalFormTitle" class="font-logo text-xl tracking-wider text-white font-bold uppercase">ADD NEW CONTENT</h3>
+                <p class="text-[10px] text-zinc-400">Tambah filem atau siri baharu.</p>
+            </div>
+            <div id="typeSelectorContainer" class="mb-4">
+                <label class="block text-[11px] font-semibold text-zinc-300 mb-1.5">Content Type</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" id="btnTypeFilm" onclick="setUploadType('film')" class="py-2 px-3 rounded-lg border flex items-center justify-center gap-1.5 text-xs font-semibold transition-all bg-white border-white text-black">🎬 Movie</button>
+                    <button type="button" id="btnTypeSeries" onclick="setUploadType('series')" class="py-2 px-3 rounded-lg border flex items-center justify-center gap-1.5 text-xs font-semibold transition-all bg-zinc-800/60 border-zinc-700 text-zinc-400">📺 Series</button>
+                </div>
+            </div>
+            <form id="uploadForm" onsubmit="handleUploadSubmit(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="contentType" value="film">
+                <input type="hidden" id="editMediaId" value="">
+                <div>
+                    <label class="block font-semibold text-zinc-300 mb-1">Title</label>
+                    <input type="text" id="inputTitle" required placeholder="Contoh: Squid Game" class="w-full bg-[#282828] text-white rounded-lg px-3 py-2 border border-white focus:outline-none focus:border-white">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-zinc-300 mb-1">Genre</label>
+                        <select id="inputGenre" class="w-full bg-[#282828] text-white rounded-lg px-3 py-2 border border-white focus:outline-none focus:border-white">
+                            <option value="Action">Action</option>
+                            <option value="Animation">Animation</option>
+                            <option value="Drama">Drama</option>
+                            <option value="Comedy">Comedy</option>
+                            <option value="Horror">Horror</option>
+                            <option value="Romance">Romance</option>
+                            <option value="Sci-Fi">Sci-Fi</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-zinc-300 mb-1">Year</label>
+                        <input type="number" id="inputYear" value="2026" required min="1900" max="2099" class="w-full bg-[#282828] text-white rounded-lg px-3 py-2 border border-white focus:outline-none focus:border-white">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-zinc-300 mb-1">Synopsis</label>
+                    <textarea id="inputSynopsis" rows="2" placeholder="Tulis sinopsis..." class="w-full bg-[#282828] text-white rounded-lg px-3 py-2 border border-white focus:outline-none focus:border-white resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="block font-semibold text-zinc-300 mb-1">Poster Direct Link URL</label>
+                    <input type="url" id="inputPosterUrl" required placeholder="https://files.catbox.moe/example.jpg" class="w-full bg-[#282828] text-white rounded-lg px-3 py-2 border border-white focus:outline-none focus:border-white">
+                </div>
+                <div id="singleVideoContainer">
+                    <label class="block font-semibold text-zinc-300 mb-1">Video URL / Abyss ID</label>
+                    <input type="text" id="inputVideoUrl" placeholder="lHR0Noal0 atau https://..." class="w-full bg-[#282828] text-white rounded-lg px-3 py-2 border border-white focus:outline-none focus:border-white">
+                </div>
+                <div id="seriesEpisodesContainer" class="hidden space-y-2 pt-1">
+                    <div class="flex items-center justify-between border-t border-zinc-800 pt-2">
+                        <label class="block font-semibold text-zinc-300">Episodes List</label>
+                        <button type="button" onclick="addEpisodeInputCard()" class="text-white font-semibold hover:underline">+ Add Episode</button>
+                    </div>
+                    <div id="episodesList" class="space-y-2 max-h-56 overflow-y-auto pr-1"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 pt-3 border-t border-zinc-800">
+                    <button type="button" onclick="closeUploadModal()" class="py-2 px-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white font-bold">Batal</button>
+                    <button type="submit" id="btnSubmitUpload" class="py-2 px-3 rounded-lg bg-white hover:bg-zinc-200 text-black font-bold">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MEDIA DETAIL MODAL -->
+    <div id="detailModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-3 overflow-y-auto">
+        <div class="bg-[#181818] border border-zinc-800 text-white rounded-xl w-full max-w-xl overflow-hidden shadow-2xl relative my-6">
+            <button onclick="closeDetailModal()" class="absolute top-3 right-3 z-20 bg-black/60 hover:bg-brand-red text-white w-7 h-7 rounded-full flex items-center justify-center transition-colors">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+            <div id="detailBanner" class="relative h-44 sm:h-52 bg-cover bg-center flex items-end p-4">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#181818] via-[#181818]/60 to-transparent"></div>
+                <div class="relative z-10 space-y-1">
+                    <span id="detailBadge" class="bg-white text-black text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">SERIES</span>
+                    <h2 id="detailTitle" class="text-xl sm:text-2xl font-extrabold tracking-tight text-white leading-tight">Media Title</h2>
+                    <div class="flex items-center gap-2 text-[11px] text-zinc-300 font-medium">
+                        <span id="detailYear">2026</span> <span class="text-zinc-500">|</span> <span id="detailGenre">Action</span>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 space-y-3">
+                <div>
+                    <h4 class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">Synopsis</h4>
+                    <p id="detailSynopsis" class="text-xs text-zinc-300 leading-relaxed max-h-20 overflow-y-auto pr-1">Sinopsis...</p>
+                </div>
+
+                <div id="detailSeriesActions" class="hidden space-y-2">
+                    <!-- REKAAN MENU SEASON MINIMALIST -->
+                    <div class="relative inline-block w-full">
+                        <button type="button" onclick="toggleSeasonDropdown()" class="w-full flex items-center justify-between bg-[#1f1f1f] hover:bg-[#282828] border border-zinc-700/80 text-white text-[11px] font-bold px-3.5 py-2 rounded-lg transition-all shadow-sm">
+                            <span id="currentSeasonLabel" class="tracking-wide">Season 1</span>
+                            <i id="seasonChevron" class="fa-solid fa-chevron-down text-[9px] text-zinc-400 transition-transform duration-200"></i>
+                        </button>
+
+                        <!-- Dropdown Menu Terapung -->
+                        <div id="seasonDropdownMenu" class="hidden absolute left-0 right-0 mt-1 bg-[#1a1a1a] border border-zinc-700/80 rounded-lg shadow-2xl z-30 overflow-hidden py-1">
+                            <div id="seasonDropdownList" class="max-h-40 overflow-y-auto divide-y divide-zinc-800/40"></div>
+                        </div>
+                    </div>
+
+                    <!-- Butang Play S[X] EP 1 -->
+                    <button id="btnPlaySeasonFirstEp" onclick="playFirstEpisodeOfCurrentSeason()" class="w-full bg-white hover:bg-zinc-200 text-black py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.01]">
+                        <i class="fa-solid fa-play text-[10px] text-black"></i> <span id="btnPlaySeasonText">Play S1 EP 1</span>
+                    </button>
+                </div>
+
+                <div id="detailFilmActions" class="flex items-center gap-2 hidden">
+                    <button id="btnPlayFilm" onclick="playFilmFromDetail()" class="w-full bg-white hover:bg-zinc-200 text-black py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.01]">
+                        <i class="fa-solid fa-play text-[10px] text-black"></i> Watch Now
+                    </button>
+                </div>
+
+                <div id="detailSeriesSection" class="space-y-2 border-t border-zinc-800/80 pt-2.5">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-bold text-white flex items-center gap-2">
+                            <span>Senarai Episod</span>
+                            <span id="detailEpisodeCount" class="text-[10px] font-normal text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded-full">0 Episodes</span>
+                        </h4>
+                    </div>
+                    <div id="detailEpisodesList" class="space-y-1.5 max-h-48 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIDEO PLAYER MODAL -->
+    <div id="videoModal" class="fixed inset-0 z-50 bg-black/95 hidden flex flex-col items-center justify-center p-2 sm:p-4 backdrop-blur-lg">
+        <div class="w-full max-w-4xl flex items-center justify-between py-2 px-3 text-white">
+            <div class="flex items-center gap-2">
+                <button onclick="closeVideoModal()" class="text-zinc-400 hover:text-white p-1 text-base"><i class="fa-solid fa-arrow-left"></i></button>
+                <div>
+                    <h3 id="playerTitle" class="text-xs sm:text-sm font-bold truncate max-w-xs sm:max-w-md">Watching Video</h3>
+                    <p id="playerSubtitle" class="text-[10px] text-zinc-400">Balflix Player</p>
+                </div>
+            </div>
+            <button onclick="closeVideoModal()" class="text-zinc-400 hover:text-white p-1 text-base"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <div id="playerContainer" class="w-full max-w-4xl bg-black rounded-xl overflow-hidden flex items-center justify-center relative border border-zinc-800 aspect-video">
+            <iframe id="mainIframePlayer" class="w-full h-full border-0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
+        </div>
+
+        <!-- NAVIGATION EPISODE (PREV / NEXT) DI BAWAH SINOSPSIS / PEMAIN VIDEO -->
+        <div id="playerEpisodeNav" class="w-full max-w-4xl mt-3 grid grid-cols-2 gap-3 hidden">
+            <!-- PREV BUTTON -->
+            <button id="btnPrevEp" onclick="playPrevEpisode()" class="group bg-[#181818] hover:bg-[#222222] border border-zinc-800 hover:border-zinc-700 p-3 rounded-xl flex items-center gap-3 text-left transition-all relative overflow-hidden">
+                <div class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-white flex-shrink-0">
+                    <i class="fa-solid fa-chevron-left text-xs"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">PREV</p>
+                    <h4 id="prevEpTitle" class="text-xs font-bold text-zinc-300 group-hover:text-white truncate">Episod Sebelumnya</h4>
+                </div>
+            </button>
+
+            <!-- NEXT BUTTON -->
+            <button id="btnNextEp" onclick="playNextEpisode()" class="group bg-[#181818] hover:bg-[#222222] border border-zinc-800 hover:border-zinc-700 p-3 rounded-xl flex items-center justify-end gap-3 text-right transition-all relative overflow-hidden">
+                <div class="min-w-0">
+                    <p class="text-[9px] font-bold text-brand-red uppercase tracking-widest">NEXT</p>
+                    <h4 id="nextEpTitle" class="text-xs font-bold text-zinc-300 group-hover:text-white truncate">Episod Seterusnya</h4>
+                </div>
+                <div class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-white flex-shrink-0">
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <!-- Script Utama -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDz8PtnAzWDEYYcutZub3MurRN-AJ5T1bM",
+            authDomain: "balflix-stream.firebaseapp.com",
+            databaseURL: "https://balflix-stream-default-rtdb.firebaseio.com",
+            projectId: "balflix-stream",
+            storageBucket: "balflix-stream.appspot.com",
+            messagingSenderId: "729287387279",
+            appId: "1:729287387279:web:4a0a97651d13dd775a8fa"
+        };
+
+        let db = null;
+        try {
+            const app = initializeApp(firebaseConfig);
+            db = getDatabase(app);
+        } catch (e) {
+            console.warn("Firebase warning:", e);
+        }
+
+        const ADMIN_PASSWORD = "BALFLIX123";
+        let activeMediaList = [];
+        let currentDetailMedia = null;
+        let currentSelectedSeason = 1;
+        let currentPlayingMediaId = null;
+        let currentPlayingEpIndex = -1;
+        let episodeCounter = 0;
+
+        const DEFAULT_MOVIES = [
+            {
+                id: 'squid-game-2024',
+                title: 'Squid Game',
+                type: 'series',
+                genre: 'Action',
+                year: 2024,
+                synopsis: "In the second season of Squid Game, Seong Gi-hun returns to the deadly games.",
+                posterUrl: 'https://files.catbox.moe/mvu8t7.jpg',
+                episodes: [
+                    { season: 1, episodeNum: 1, title: 'Red Light, Green Light', synopsis: 'First game.', videoUrl: 'lHR0Noal0' },
+                    { season: 1, episodeNum: 2, title: 'Halloween Party', synopsis: 'Second episode.', videoUrl: 'lHR0Noal0' },
+                    { season: 1, episodeNum: 3, title: '001', synopsis: 'Third episode.', videoUrl: 'lHR0Noal0' },
+                    { season: 2, episodeNum: 1, title: 'Brea And Lottery', synopsis: 'Gi-hun searches for the recruiter.', videoUrl: 'lHR0Noal0' }
+                ]
+            }
+        ];
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await fetchGlobalData();
+            window.addEventListener('click', (e) => {
+                const menu = document.getElementById('seasonDropdownMenu');
+                const btn = menu?.previousElementSibling;
+                if (menu && !menu.classList.contains('hidden') && !btn.contains(e.target) && !menu.contains(e.target)) {
+                    menu.classList.add('hidden');
+                    document.getElementById('seasonChevron')?.classList.remove('rotate-180');
+                }
+            });
+        });
+
+        async function fetchGlobalData() {
+            try {
+                if (db) {
+                    const dbRef = ref(db);
+                    const snapshot = await get(child(dbRef, 'balflix_media'));
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        activeMediaList = Array.isArray(data) ? data : Object.values(data);
+                    } else {
+                        activeMediaList = [...DEFAULT_MOVIES];
+                        await syncGlobalData();
+                    }
+                } else {
+                    loadFromLocal();
+                }
+            } catch (err) {
+                loadFromLocal();
+            } finally {
+                if (!activeMediaList || activeMediaList.length === 0) {
+                    activeMediaList = [...DEFAULT_MOVIES];
+                }
+                renderDashboard();
+            }
+        }
+
+        function loadFromLocal() {
+            const localData = localStorage.getItem('balflix_media_local');
+            if (localData) {
+                try {
+                    activeMediaList = JSON.parse(localData);
+                } catch(e) {
+                    activeMediaList = [...DEFAULT_MOVIES];
+                }
+            } else {
+                activeMediaList = [...DEFAULT_MOVIES];
+                localStorage.setItem('balflix_media_local', JSON.stringify(activeMediaList));
+            }
+        }
+
+        async function syncGlobalData() {
+            localStorage.setItem('balflix_media_local', JSON.stringify(activeMediaList));
+            try {
+                if (db) {
+                    const dataObj = {};
+                    activeMediaList.forEach(item => {
+                        dataObj[item.id] = item;
+                    });
+                    await set(ref(db, 'balflix_media'), dataObj);
+                }
+            } catch (err) {}
+        }
+
+        // FUNGSI UTAMA: Buka Admin Panel (Semak status "Remember Me" dalam localStorage)
+        window.openAdminPanel = function() {
+            const isLoggedIn = localStorage.getItem('balflix_admin_logged_in');
+            if (isLoggedIn === 'true') {
+                openAdminPanelModal();
+            } else {
+                openAdminLoginModal();
+            }
+        }
+
+        window.openAdminLoginModal = function() {
+            document.getElementById('adminPasswordInput').value = '';
+            document.getElementById('adminLoginError').classList.add('hidden');
+            document.getElementById('adminLoginModal').classList.remove('hidden');
+        }
+
+        window.closeAdminLoginModal = function() {
+            document.getElementById('adminLoginModal').classList.add('hidden');
+        }
+
+        window.verifyAdminPassword = function(e) {
+            e.preventDefault();
+            const password = document.getElementById('adminPasswordInput').value;
+            const errorMsg = document.getElementById('adminLoginError');
+
+            if (password === ADMIN_PASSWORD) {
+                // Simpan status log masuk supaya kekal walaupun tutup tab/pelayar web
+                localStorage.setItem('balflix_admin_logged_in', 'true');
+                closeAdminLoginModal();
+                openAdminPanelModal();
+            } else {
+                errorMsg.classList.remove('hidden');
+            }
+        }
+
+        window.logoutAdmin = function() {
+            // Padam status log masuk dari localStorage
+            localStorage.removeItem('balflix_admin_logged_in');
+            closeAdminPanelModal();
+            Swal.fire({
+                title: 'Log Keluar',
+                text: 'Anda telah log keluar dari Admin Panel.',
+                icon: 'info',
+                timer: 1500,
+                showConfirmButton: false,
+                background: '#181818',
+                color: '#fff'
+            });
+        }
+
+        window.openAdminPanelModal = function() {
+            renderAdminContentList();
+            document.getElementById('adminPanelModal').classList.remove('hidden');
+        }
+
+        window.closeAdminPanelModal = function() {
+            document.getElementById('adminPanelModal').classList.add('hidden');
+        }
+
+        function renderAdminContentList() {
+            const listContainer = document.getElementById('adminContentList');
+            const countSpan = document.getElementById('adminMediaCount');
+            if (countSpan) countSpan.textContent = activeMediaList.length;
+
+            if (activeMediaList.length === 0) {
+                listContainer.innerHTML = `<p class="text-xs text-zinc-500 py-4 text-center">No content available.</p>`;
+                return;
+            }
+
+            listContainer.innerHTML = activeMediaList.map(item => `
+                <div class="flex items-center justify-between p-2.5 bg-zinc-900 border border-zinc-800 rounded-lg">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <img src="${item.posterUrl}" class="w-8 h-10 object-cover rounded flex-shrink-0">
+                        <div class="min-w-0">
+                            <h5 class="text-xs font-bold text-white truncate">${escapeHTML(item.title)}</h5>
+                            <p class="text-[9px] text-zinc-400 uppercase">${item.type} • ${item.year} • ${item.genre}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 flex-shrink-0">
+                        <button type="button" onclick="editMedia('${item.id}')" class="text-[10px] bg-blue-950/60 hover:bg-blue-900/80 text-blue-300 px-2.5 py-1 rounded border border-blue-800/40 font-semibold transition-colors">
+                            <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
+                        </button>
+                        <button type="button" onclick="deleteMedia('${item.id}')" class="text-[10px] bg-red-950/50 hover:bg-red-900/80 text-red-300 px-2.5 py-1 rounded border border-red-800/40 font-semibold transition-colors">
+                            <i class="fa-solid fa-trash mr-1"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.editMedia = function(id) {
+            const item = activeMediaList.find(m => m.id == id);
+            if (!item) return;
+
+            closeAdminPanelModal();
+            document.getElementById('modalFormTitle').textContent = "EDIT CONTENT";
+            document.getElementById('editMediaId').value = item.id;
+            document.getElementById('inputTitle').value = item.title;
+            document.getElementById('inputGenre').value = item.genre;
+            document.getElementById('inputYear').value = item.year;
+            document.getElementById('inputSynopsis').value = item.synopsis || '';
+            document.getElementById('inputPosterUrl').value = item.posterUrl;
+            document.getElementById('inputVideoUrl').value = item.videoUrl || '';
+
+            setUploadType(item.type);
+
+            if (item.type === 'series') {
+                const list = document.getElementById('episodesList');
+                list.innerHTML = '';
+                if (item.episodes && item.episodes.length > 0) {
+                    item.episodes.forEach(ep => {
+                        addEpisodeInputCard(ep.season || 1, ep.episodeNum, ep.title, ep.synopsis || '', ep.videoUrl);
+                    });
+                } else {
+                    addEpisodeInputCard();
+                }
+            }
+
+            document.getElementById('uploadModal').classList.remove('hidden');
+        }
+
+        window.deleteMedia = async function(id) {
+            Swal.fire({
+                title: 'Padam Konten?',
+                text: "Konten ini akan dipadam.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#333',
+                cancelButtonColor: '#222',
+                confirmButtonText: 'Ya, Padam!',
+                background: '#181818',
+                color: '#fff'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    activeMediaList = activeMediaList.filter(m => m.id != id);
+                    await syncGlobalData();
+                    renderAdminContentList();
+                    renderDashboard();
+                    
+                    Swal.fire({
+                        title: 'Berjaya!',
+                        text: 'Konten telah dipadam.',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        background: '#181818',
+                        color: '#fff'
+                    });
+                }
+            });
+        }
+
+        window.openUploadModalFromPanel = function() {
+            closeAdminPanelModal();
+            resetUploadForm();
+            document.getElementById('modalFormTitle').textContent = "ADD NEW CONTENT";
+            document.getElementById('uploadModal').classList.remove('hidden');
+        }
+
+        window.closeUploadModal = function() {
+            document.getElementById('uploadModal').classList.add('hidden');
+        }
+
+        window.setUploadType = function(type) {
+            document.getElementById('contentType').value = type;
+            const btnFilm = document.getElementById('btnTypeFilm');
+            const btnSeries = document.getElementById('btnTypeSeries');
+            const singleVideoContainer = document.getElementById('singleVideoContainer');
+            const seriesEpisodesContainer = document.getElementById('seriesEpisodesContainer');
+
+            if (type === 'film') {
+                btnFilm.className = "py-2 px-3 rounded-lg border flex items-center justify-center gap-1.5 text-xs font-semibold transition-all bg-white border-white text-black";
+                btnSeries.className = "py-2 px-3 rounded-lg border flex items-center justify-center gap-1.5 text-xs font-semibold transition-all bg-zinc-800/60 border-zinc-700 text-zinc-400";
+                singleVideoContainer.classList.remove('hidden');
+                seriesEpisodesContainer.classList.add('hidden');
+            } else {
+                btnSeries.className = "py-2 px-3 rounded-lg border flex items-center justify-center gap-1.5 text-xs font-semibold transition-all bg-white border-white text-black";
+                btnFilm.className = "py-2 px-3 rounded-lg border flex items-center justify-center gap-1.5 text-xs font-semibold transition-all bg-zinc-800/60 border-zinc-700 text-zinc-400";
+                singleVideoContainer.classList.add('hidden');
+                seriesEpisodesContainer.classList.remove('hidden');
+                if (document.getElementById('episodesList').children.length === 0) addEpisodeInputCard();
+            }
+        }
+
+        function resetUploadForm() {
+            document.getElementById('uploadForm').reset();
+            document.getElementById('editMediaId').value = '';
+            document.getElementById('episodesList').innerHTML = '';
+            setUploadType('film');
+        }
+
+        window.addEpisodeInputCard = function(season = 1, episodeNum = null, title = '', synopsis = '', videoUrl = '') {
+            episodeCounter++;
+            const episodeId = `ep_${Date.now()}_${episodeCounter}`;
+            const list = document.getElementById('episodesList');
+            const epNumberVal = episodeNum !== null ? episodeNum : (list.children.length + 1);
+
+            const card = document.createElement('div');
+            card.id = episodeId;
+            card.className = "p-2.5 bg-[#222222] border border-white rounded-lg space-y-2 relative text-xs";
+            card.innerHTML = `
+                <div class="grid grid-cols-6 gap-1.5">
+                    <input type="number" placeholder="Season" value="${season}" min="1" class="col-span-1 ep-season bg-[#282828] text-white rounded px-1.5 py-1.5 border border-white text-center font-bold">
+                    <input type="number" placeholder="Episod" value="${epNumberVal}" min="1" class="col-span-1 ep-number bg-[#282828] text-white rounded px-1.5 py-1.5 border border-white text-center">
+                    <input type="text" placeholder="Tajuk Episod" value="${escapeHTML(title)}" class="col-span-4 ep-title bg-[#282828] text-white rounded px-2.5 py-1.5 border border-white">
+                </div>
+                <div>
+                    <textarea placeholder="Sinopsis episod..." rows="1" class="ep-synopsis w-full bg-[#282828] text-white rounded px-2.5 py-1.5 border border-white resize-none">${escapeHTML(synopsis)}</textarea>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <input type="text" placeholder="Abyss ID / Video URL" value="${escapeHTML(videoUrl)}" class="ep-url flex-grow bg-[#282828] text-white rounded px-2.5 py-1.5 border border-white">
+                    <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400 hover:text-red-300 px-2 py-1 bg-red-950/40 rounded border border-red-800/40"><i class="fa-solid fa-trash-can"></i></button>
+                </div>
+            `;
+            list.appendChild(card);
+        }
+
+        window.handleUploadSubmit = async function(e) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('btnSubmitUpload');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+
+            const editId = document.getElementById('editMediaId').value;
+            const contentType = document.getElementById('contentType').value;
+            const title = document.getElementById('inputTitle').value.trim();
+            const genre = document.getElementById('inputGenre').value;
+            const year = parseInt(document.getElementById('inputYear').value) || 2026;
+            const synopsis = document.getElementById('inputSynopsis').value.trim();
+            const posterUrl = document.getElementById('inputPosterUrl').value.trim();
+            const videoUrl = document.getElementById('inputVideoUrl').value.trim();
+
+            const mediaData = {
+                id: editId ? editId : 'media_' + Date.now(),
+                title, type: contentType, genre, year, synopsis, posterUrl, videoUrl
+            };
+
+            if (contentType === 'series') {
+                const episodeCards = document.querySelectorAll('#episodesList > div');
+                const episodes = [];
+                episodeCards.forEach(card => {
+                    episodes.push({
+                        season: parseInt(card.querySelector('.ep-season').value) || 1,
+                        episodeNum: parseInt(card.querySelector('.ep-number').value) || 1,
+                        title: card.querySelector('.ep-title').value.trim() || 'Episode',
+                        synopsis: card.querySelector('.ep-synopsis').value.trim(),
+                        videoUrl: card.querySelector('.ep-url').value.trim()
+                    });
+                });
+                mediaData.episodes = episodes;
+            }
+
+            if (editId) {
+                const index = activeMediaList.findIndex(m => m.id == editId);
+                if (index !== -1) {
+                    activeMediaList[index] = mediaData;
+                }
+            } else {
+                activeMediaList.unshift(mediaData);
+            }
+
+            await syncGlobalData();
+            closeUploadModal();
+            renderDashboard();
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Simpan';
+
+            Swal.fire({
+                title: 'Berjaya!',
+                text: 'Konten telah disimpan.',
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false,
+                background: '#181818',
+                color: '#fff'
+            });
+        }
+
+        function renderDashboard() {
+            const moviesGrid = document.getElementById('moviesGrid');
+            const seriesGrid = document.getElementById('seriesGrid');
+            const moviesCount = document.getElementById('moviesCount');
+            const seriesCount = document.getElementById('seriesCount');
+
+            const movies = activeMediaList.filter(item => item.type === 'film');
+            const series = activeMediaList.filter(item => item.type === 'series');
+
+            if (moviesCount) moviesCount.textContent = `${movies.length} Movies`;
+            if (seriesCount) seriesCount.textContent = `${series.length} Series`;
+
+            renderHeroSection();
+
+            if (moviesGrid) {
+                moviesGrid.innerHTML = movies.length === 0 ? `<p class="col-span-full text-xs text-zinc-500 py-4 text-center">Tiada movie.</p>` : movies.map(item => createMediaCardHTML(item)).join('');
+            }
+
+            if (seriesGrid) {
+                seriesGrid.innerHTML = series.length === 0 ? `<p class="col-span-full text-xs text-zinc-500 py-4 text-center">Tiada siri.</p>` : series.map(item => createMediaCardHTML(item)).join('');
+            }
+        }
+
+        function renderHeroSection() {
+            const heroContent = document.getElementById('heroContent');
+            const heroBackdrop = document.getElementById('heroBackdrop');
+            if (!heroContent || !heroBackdrop || activeMediaList.length === 0) return;
+
+            const featured = activeMediaList[0];
+            heroBackdrop.style.backgroundImage = `url('${featured.posterUrl}')`;
+            heroContent.innerHTML = `
+                <span class="bg-white text-black text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-widest mb-2 inline-block">
+                    ${featured.type === 'series' ? 'FEATURED SERIES' : 'FEATURED MOVIE'}
+                </span>
+                <h1 class="text-2xl sm:text-4xl font-black text-white tracking-tight mb-2 uppercase drop-shadow-md">
+                    ${escapeHTML(featured.title)}
+                </h1>
+                <p class="text-xs text-zinc-300 mb-4 line-clamp-2 leading-relaxed">
+                    ${escapeHTML(featured.synopsis || '')}
+                </p>
+                <button type="button" onclick="openDetailModal('${featured.id}')" class="bg-white hover:bg-zinc-200 text-black px-5 py-2 rounded-lg font-extrabold text-xs flex items-center gap-1.5">
+                    <i class="fa-solid fa-play text-[10px] text-black"></i> Watch Now
+                </button>
+            `;
+        }
+
+        function createMediaCardHTML(item) {
+            return `
+                <div onclick="openDetailModal('${item.id}')" class="group cursor-pointer relative bg-brand-card rounded-lg overflow-hidden border border-zinc-800/80 card-hover-effect">
+                    <div class="aspect-[2/3] w-full bg-zinc-900 relative overflow-hidden">
+                        <img src="${item.posterUrl}" alt="${escapeHTML(item.title)}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-2.5 space-y-1">
+                        <h3 class="text-xs font-bold text-white truncate group-hover:text-zinc-300 transition-colors">${escapeHTML(item.title)}</h3>
+                        <p class="text-[10px] text-zinc-400 line-clamp-2 leading-tight">${escapeHTML(item.synopsis || 'Tiada penerangan.')}</p>
+                        <div class="text-[9px] text-zinc-500 pt-1">
+                            <span>${item.year}</span> &nbsp;|&nbsp; <span>${item.genre}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.openDetailModal = function(id) {
+            const item = activeMediaList.find(m => m.id == id);
+            if (!item) return;
+
+            currentDetailMedia = item;
+            document.getElementById('detailTitle').textContent = item.title;
+            document.getElementById('detailYear').textContent = item.year;
+            document.getElementById('detailGenre').textContent = item.genre;
+            document.getElementById('detailSynopsis').textContent = item.synopsis || '';
+            document.getElementById('detailBanner').style.backgroundImage = `url('${item.posterUrl}')`;
+
+            const filmActions = document.getElementById('detailFilmActions');
+            const seriesActions = document.getElementById('detailSeriesActions');
+            const seriesSection = document.getElementById('detailSeriesSection');
+
+            if (item.type === 'film') {
+                filmActions.classList.remove('hidden');
+                seriesActions.classList.add('hidden');
+                seriesSection.classList.add('hidden');
+            } else {
+                filmActions.classList.add('hidden');
+                seriesActions.classList.remove('hidden');
+                seriesSection.classList.remove('hidden');
+                setupSeasonSelector(item);
+            }
+
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function setupSeasonSelector(mediaItem) {
+            const episodes = mediaItem.episodes || [];
+            const seasonsSet = new Set();
+            episodes.forEach(ep => {
+                seasonsSet.add(parseInt(ep.season) || 1);
+            });
+            const seasons = Array.from(seasonsSet).sort((a, b) => a - b);
+            
+            if (seasons.length === 0) seasons.push(1);
+            
+            if (!seasons.includes(currentSelectedSeason)) {
+                currentSelectedSeason = seasons[0];
+            }
+
+            updateSeasonUI(currentSelectedSeason);
+
+            const dropdownList = document.getElementById('seasonDropdownList');
+            dropdownList.innerHTML = seasons.map(s => `
+                <button type="button" onclick="selectSeason(${s})" class="w-full text-left px-3.5 py-2 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-zinc-800/80 transition-colors flex items-center justify-between">
+                    <span>Season ${s}</span>
+                    ${s === currentSelectedSeason ? '<i class="fa-solid fa-check text-[10px] text-white"></i>' : ''}
+                </button>
+            `).join('');
+
+            renderEpisodesForSeason(mediaItem, currentSelectedSeason);
+        }
+
+        window.toggleSeasonDropdown = function() {
+            const menu = document.getElementById('seasonDropdownMenu');
+            const chevron = document.getElementById('seasonChevron');
+            menu.classList.toggle('hidden');
+            chevron.classList.toggle('rotate-180');
+        }
+
+        window.selectSeason = function(seasonNum) {
+            currentSelectedSeason = parseInt(seasonNum);
+            updateSeasonUI(currentSelectedSeason);
+            document.getElementById('seasonDropdownMenu').classList.add('hidden');
+            document.getElementById('seasonChevron').classList.remove('rotate-180');
+
+            if (currentDetailMedia) {
+                setupSeasonSelector(currentDetailMedia);
+                renderEpisodesForSeason(currentDetailMedia, currentSelectedSeason);
+            }
+        }
+
+        function updateSeasonUI(seasonNum) {
+            document.getElementById('currentSeasonLabel').textContent = `Season ${seasonNum}`;
+            document.getElementById('btnPlaySeasonText').textContent = `Play S${seasonNum} EP 1`;
+        }
+
+        function renderEpisodesForSeason(mediaItem, seasonNum) {
+            const list = document.getElementById('detailEpisodesList');
+            const allEpisodes = mediaItem.episodes || [];
+            const seasonEpisodes = allEpisodes.filter(ep => (parseInt(ep.season) || 1) === seasonNum);
+            
+            document.getElementById('detailEpisodeCount').textContent = `${seasonEpisodes.length} Episodes`;
+
+            if (seasonEpisodes.length === 0) {
+                list.innerHTML = `<p class="text-xs text-zinc-500 py-3 text-center">Tiada episod untuk Season ${seasonNum}.</p>`;
+                return;
+            }
+
+            list.innerHTML = seasonEpisodes.map((ep) => {
+                const realIndex = allEpisodes.findIndex(e => e === ep);
+                return `
+                    <div onclick="playEpisode('${mediaItem.id}', ${realIndex})" class="group cursor-pointer flex items-center gap-2.5 p-1.5 rounded-lg bg-[#222222]/60 hover:bg-[#2a2a2a] border border-zinc-800 hover:border-zinc-700 transition-all">
+                        <span class="text-sm font-bold text-zinc-400 group-hover:text-white w-5 text-center">${ep.episodeNum}</span>
+                        <div class="relative w-20 h-12 bg-zinc-900 rounded overflow-hidden flex-shrink-0">
+                            <img src="${mediaItem.posterUrl}" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                            <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <i class="fa-solid fa-play text-white text-[10px]"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow min-w-0">
+                            <h5 class="text-[11px] font-bold text-white truncate group-hover:text-zinc-300 transition-colors">${escapeHTML(ep.title)}</h5>
+                            <p class="text-[9px] text-zinc-400 line-clamp-1 mt-0.5">${escapeHTML(ep.synopsis || mediaItem.synopsis || 'Episod ' + ep.episodeNum)}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.closeDetailModal = function() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        window.playFirstEpisodeOfCurrentSeason = function() {
+            if (!currentDetailMedia || !currentDetailMedia.episodes) return;
+            const allEpisodes = currentDetailMedia.episodes;
+            
+            let targetIndex = -1;
+            let lowestEpNum = 99999;
+
+            allEpisodes.forEach((e, idx) => {
+                if ((parseInt(e.season) || 1) === currentSelectedSeason) {
+                    if (parseInt(e.episodeNum) < lowestEpNum) {
+                        lowestEpNum = parseInt(e.episodeNum);
+                        targetIndex = idx;
+                    }
+                }
+            });
+            
+            if (targetIndex !== -1) {
+                playEpisode(currentDetailMedia.id, targetIndex);
+            } else {
+                Swal.fire({ title: 'Ralat', text: `Tiada Episod 1 untuk Season ${currentSelectedSeason}!`, icon: 'error', confirmButtonColor: '#333', background: '#181818', color: '#fff' });
+            }
+        }
+
+        window.playFilmFromDetail = function() {
+            if (!currentDetailMedia) return;
+            openVideoPlayer(currentDetailMedia.title, currentDetailMedia.videoUrl, null, null);
+        }
+
+        window.playEpisode = function(mediaId, epIndex) {
+            const media = activeMediaList.find(m => m.id == mediaId);
+            if (!media || !media.episodes || !media.episodes[epIndex]) return;
+            const ep = media.episodes[epIndex];
+            openVideoPlayer(`${media.title} - S${ep.season || 1} E${ep.episodeNum} (${ep.title})`, ep.videoUrl, mediaId, epIndex);
+        }
+
+        window.openVideoPlayer = function(title, videoSource, mediaId = null, epIndex = null) {
+            const iframeElement = document.getElementById('mainIframePlayer');
+            document.getElementById('playerTitle').textContent = title;
+
+            currentPlayingMediaId = mediaId;
+            currentPlayingEpIndex = epIndex;
+
+            const navContainer = document.getElementById('playerEpisodeNav');
+            if (mediaId !== null && epIndex !== null) {
+                const media = activeMediaList.find(m => m.id == mediaId);
+                if (media && media.episodes) {
+                    navContainer.classList.remove('hidden');
+                    updateEpisodeNavButtons(media, epIndex);
+                } else {
+                    navContainer.classList.add('hidden');
+                }
+            } else {
+                navContainer.classList.add('hidden');
+            }
+
+            if (!videoSource) {
+                Swal.fire({ title: 'Ralat', text: 'Pautan video tidak tersedia!', icon: 'error', confirmButtonColor: '#333', background: '#181818', color: '#fff' });
+                return;
+            }
+
+            let finalUrl = videoSource;
+            if (!videoSource.startsWith('http')) {
+                finalUrl = `https://player.abyssplayer.com/${videoSource}`;
+            } else if (videoSource.includes('drive.google.com')) {
+                const match = videoSource.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                if (match && match[1]) {
+                    finalUrl = `https://drive.google.com/file/d/${match[1]}/preview`;
+                }
+            }
+
+            iframeElement.src = finalUrl;
+            document.getElementById('videoModal').classList.remove('hidden');
+        }
+
+        function updateEpisodeNavButtons(media, currentIndex) {
+            const episodes = media.episodes;
+            const btnPrev = document.getElementById('btnPrevEp');
+            const btnNext = document.getElementById('btnNextEp');
+            const prevTitle = document.getElementById('prevEpTitle');
+            const nextTitle = document.getElementById('nextEpTitle');
+
+            if (currentIndex > 0) {
+                const prevEp = episodes[currentIndex - 1];
+                prevTitle.textContent = `S${prevEp.season || 1} Ep ${prevEp.episodeNum}: ${prevEp.title}`;
+                btnPrev.style.display = 'flex';
+                btnPrev.onclick = () => playEpisode(media.id, currentIndex - 1);
+            } else {
+                btnPrev.style.display = 'none';
+            }
+
+            if (currentIndex < episodes.length - 1) {
+                const nextEp = episodes[currentIndex + 1];
+                nextTitle.textContent = `S${nextEp.season || 1} Ep ${nextEp.episodeNum}: ${nextEp.title}`;
+                btnNext.style.display = 'flex';
+                btnNext.onclick = () => playEpisode(media.id, currentIndex + 1);
+            } else {
+                btnNext.style.display = 'none';
+            }
+        }
+
+        window.playPrevEpisode = function() {
+            if (currentPlayingMediaId !== null && currentPlayingEpIndex > 0) {
+                playEpisode(currentPlayingMediaId, currentPlayingEpIndex - 1);
+            }
+        }
+
+        window.playNextEpisode = function() {
+            if (currentPlayingMediaId !== null) {
+                const media = activeMediaList.find(m => m.id == currentPlayingMediaId);
+                if (media && media.episodes && currentPlayingEpIndex < media.episodes.length - 1) {
+                    playEpisode(currentPlayingMediaId, currentPlayingEpIndex + 1);
+                }
+            }
+        }
+
+        window.closeVideoModal = function() {
+            document.getElementById('mainIframePlayer').src = '';
+            document.getElementById('videoModal').classList.add('hidden');
+            currentPlayingMediaId = null;
+            currentPlayingEpIndex = -1;
+        }
+
+        window.showSection = function(section) {
+            const moviesSection = document.getElementById('moviesSection');
+            const seriesSection = document.getElementById('seriesSection');
+
+            if (section === 'home') {
+                moviesSection.classList.remove('hidden');
+                seriesSection.classList.remove('hidden');
+            } else if (section === 'film') {
+                moviesSection.classList.remove('hidden');
+                seriesSection.classList.add('hidden');
+            } else if (section === 'series') {
+                moviesSection.classList.add('hidden');
+                seriesSection.classList.remove('hidden');
+            }
+        }
+
+        window.handleSearch = function() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const cards = document.querySelectorAll('#moviesGrid > div, #seriesGrid > div');
+            cards.forEach(card => {
+                const titleText = card.querySelector('h3')?.textContent.toLowerCase() || '';
+                card.style.display = titleText.includes(query) ? 'block' : 'none';
+            });
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+        }
+    </script>
+</body>
+</html>
